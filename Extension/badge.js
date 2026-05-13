@@ -90,22 +90,19 @@ async function update() {
   }, 2000);
 }
 
-// Flush a pending clear immediately when the page is about to unload —
-// otherwise quitting the PWA before the 2 s debounce expires leaves a stale
-// badge stuck on the dock icon.
-function flushPendingClear() {
-  if (!pendingClear) return;
-  clearTimeout(pendingClear);
-  pendingClear = null;
-  const c = getUnread();
-  if (c === 0 && lastApplied > 0 && origClear) {
+// Always clear the dock badge when the PWA is closed. By default the
+// Web Badging API persists badges across app quits (mail.app-style), but
+// users typically expect "app closed = no badge" for a PWA-extension setup.
+function clearOnUnload() {
+  if (pendingClear) { clearTimeout(pendingClear); pendingClear = null; }
+  if (origClear) {
     // Fire-and-forget — page is unloading, can't await
     origClear().catch(() => {});
     lastApplied = 0;
   }
 }
-window.addEventListener('pagehide', flushPendingClear);
-window.addEventListener('beforeunload', flushPendingClear);
+window.addEventListener('pagehide', clearOnUnload);
+window.addEventListener('beforeunload', clearOnUnload);
 
 // ---------- bootstrap ----------
 
