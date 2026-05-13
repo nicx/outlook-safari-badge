@@ -73,6 +73,7 @@ open dist/OutlookSafariBadge.app
 | Gatekeeper on first launch | one-time right-click → „Open" per Mac |
 | No auto-update | new versions must be distributed manually |
 | Not notarized | some security tools may warn |
+| Badge persists after quitting the PWA | Mail.app-style: the dock badge keeps its last value until the PWA is reopened. The Web Badging API stores the badge at the OS level by design and can't be cleared reliably from JavaScript at process termination. Reopen the PWA and the badge re-syncs to the actual unread count within ~2 s. |
 
 With Apple Developer Program ($99/yr) + notarization these would all go away.
 
