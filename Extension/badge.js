@@ -90,19 +90,27 @@ async function update() {
   }, 2000);
 }
 
-// Always clear the dock badge when the PWA is closed. By default the
-// Web Badging API persists badges across app quits (mail.app-style), but
-// users typically expect "app closed = no badge" for a PWA-extension setup.
+// Always clear the dock badge when the PWA is closed. Web Badging API is
+// persistent by design (mail.app-style). We listen on every unload-style
+// event and fire both clearAppBadge and setAppBadge(0) in parallel — the
+// async Promises may not all complete before the process is terminated,
+// so we try multiple paths.
 function clearOnUnload() {
   if (pendingClear) { clearTimeout(pendingClear); pendingClear = null; }
-  if (origClear) {
-    // Fire-and-forget — page is unloading, can't await
-    origClear().catch(() => {});
-    lastApplied = 0;
-  }
+  try { if (origClear) origClear().catch(() => {}); } catch (_) {}
+  try { if (origSet) origSet(0).catch(() => {}); } catch (_) {}
+  lastApplied = 0;
 }
 window.addEventListener('pagehide', clearOnUnload);
 window.addEventListener('beforeunload', clearOnUnload);
+window.addEventListener('unload', clearOnUnload);
+
+// Also probe on every load: if the PWA was killed abruptly and a stale badge
+// remained, calling clearAppBadge() once at startup gives us a clean slate
+// before getUnread()/apply() decides what (if anything) to show.
+if (origClear) {
+  try { origClear().catch(() => {}); } catch (_) {}
+}
 
 // ---------- bootstrap ----------
 
