@@ -1,0 +1,19 @@
+{
+  "manifest_version": 3,
+  "name": "Outlook Unread Badge",
+  "version": "1.0",
+  "description": "Zeigt ungelesene Outlook-Mails als Badge auf dem Dock-Icon",
+  "icons": {
+    "48": "icons/icon-48.png",
+    "96": "icons/icon-96.png",
+    "128": "icons/icon-128.png"
+  },
+  "content_scripts": [
+    {
+      "matches": ["*://outlook.cloud.microsoft/*"],
+      "js": ["badge.js"],
+      "run_at": "document_start",
+      "world": "MAIN"
+    }
+  ]
+}
