@@ -16,20 +16,25 @@ if (!origSet) {
 
 // ---------- detection ----------
 
-// Folder tree items have `title="Posteingang - 9 Elemente (5 ungelesen)"`
+// Folder tree items have `title="Posteingang - 9 Elemente (5 ungelesen)"`.
+// Strict match for the top-level Inbox only — filters out subfolders and other
+// mailboxes whose names happen to start with "Posteingang"/"Inbox".
+// When the inbox is found but no "(N ungelesen)" suffix is present, we return
+// 0 explicitly (Outlook drops the suffix entirely when count is 0).
 function fromTreeTitle() {
   for (const el of document.querySelectorAll('[role="treeitem"][title]')) {
     const t = el.getAttribute('title') || '';
-    if (!/^(Posteingang|Inbox)\b/.test(t)) continue;
+    if (!/^(Posteingang|Inbox)\s*-\s*[\d.,]+\s*(?:Element|item)/i.test(t)) continue;
     const m = t.match(/\((\d+)\s*(?:ungelesen|unread)/i);
-    if (m) return parseInt(m[1], 10);
+    return m ? parseInt(m[1], 10) : 0;
   }
   return null;
 }
 
-// document.title fallback: "(5) Inbox - …"
+// document.title fallback: only Outlook's own "(N) Inbox …" / "(N) Posteingang …"
+// — not arbitrary "(N)" appearing in mail subject lines.
 function fromDocTitle() {
-  const m = document.title.match(/\((\d+)\)/);
+  const m = document.title.match(/^\((\d+)\)\s*(?:Inbox|Posteingang)\b/i);
   return m ? parseInt(m[1], 10) : null;
 }
 
